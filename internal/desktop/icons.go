@@ -1,0 +1,20 @@
+package desktop
+
+import "github.com/egoist/mygo/ui"
+
+var (
+	sidebarIcon  = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="11" rx="1.4"/><path d="M6.2 2.5v11"/></svg>`))
+	openIcon     = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h5.5L12 5v8.5H4z"/><path d="M9.5 2.5V5H12"/><path d="M8 7.5v4M6 9.5l2 2 2-2"/></svg>`))
+	saveIcon     = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h8l2 2v9H3z"/><path d="M5 2.5v4h6v-4M5 13.5V9h6v4.5"/></svg>`))
+	newIcon      = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 2.5h6L13 6v7.5h-9.5z"/><path d="M9.5 2.5V6H13"/><path d="M8 7.5v4M6 9.5h4"/></svg>`))
+	templateIcon = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1.4"/><path d="M2.5 6h11M6 6v7.5"/><path d="M8.5 8.5h3M8.5 10.5h3"/></svg>`))
+	folderIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h4l1.2 1.4h5.8v7.6h-11z"/><path d="M2.5 4.5v-1h4.2l1.1 1.4"/></svg>`))
+	pencilIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11.5-.5 2 2-.5 7.7-7.7-1.5-1.5z"/><path d="m9.8 4.8 1.5 1.5"/></svg>`))
+	trashIcon    = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5h9M6 5V3.5h4V5M5 5l.6 8h4.8l.6-8M7 7.5v3.5M9 7.5v3.5"/></svg>`))
+	importIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5v3.5h9V9.5"/><path d="M8 2.5v7M5.5 7 8 9.5 10.5 7"/></svg>`))
+	exportIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5v3.5h9V9.5"/><path d="M8 9.5v-7M5.5 5 8 2.5 10.5 5"/></svg>`))
+	minusIcon    = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"><path d="M4 8h8"/></svg>`))
+	plusIcon     = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"><path d="M8 4v8M4 8h8"/></svg>`))
+	layoutIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h7M12.5 4h1M2.5 8h2M7.5 8h6M2.5 12h5M10.5 12h3"/><circle cx="10.8" cy="4" r="1.4"/><circle cx="5.8" cy="8" r="1.4"/><circle cx="8.8" cy="12" r="1.4"/></svg>`))
+	onePageIcon  = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 2.5h6L13 6v7.5h-9.5z"/><path d="M9.5 2.5V6H13"/><path d="m6.2 9 1.3 1.3 2.5-2.6"/></svg>`))
+)

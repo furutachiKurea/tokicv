@@ -1,0 +1,12 @@
+{
+  "name": "tokicv",
+  "identifier": "com.example.tokicv",
+  "version": "0.1.1",
+  "license": "AGPL-3.0-only",
+  "resources": [
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSES"
+  ],
+  "out": "build"
+}

@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-13T20:04:10Z",
+  "title": "Design System: tokicv",
+  "extensions": {
+    "colorMeta": {
+      "shell-ground": {
+        "role": "neutral",
+        "displayName": "Shell Ground",
+        "canonical": "#EDECE8",
+        "tonalRamp": ["#72716F", "#91908E", "#AFAFAC", "#CECDCA", "#F7F6F5", "#F9F9F7", "#FBFBFA", "#FDFDFC"]
+      },
+      "toolbar-linen": {
+        "role": "neutral",
+        "displayName": "Toolbar Linen",
+        "canonical": "#E6E4DF",
+        "tonalRamp": ["#6E6D6B", "#8C8B88", "#AAA9A5", "#C8C6C2", "#F4F3F1", "#F7F6F4", "#F9F9F8", "#FCFCFB"]
+      },
+      "sidebar-tray": {
+        "role": "neutral",
+        "displayName": "Sidebar Tray",
+        "canonical": "#E9E7E2",
+        "tonalRamp": ["#706F6C", "#8E8D8A", "#ACABA7", "#CBC9C5", "#F5F4F2", "#F8F7F5", "#FAF9F8", "#FCFCFC"]
+      },
+      "proofing-stage": {
+        "role": "neutral",
+        "displayName": "Proofing Stage",
+        "canonical": "#E0DFDB",
+        "tonalRamp": ["#6C6B69", "#898886", "#A6A5A2", "#C3C2BF", "#F1F1EF", "#F4F4F3", "#F8F8F7", "#FBFBFB"]
+      },
+      "manuscript-paper": {
+        "role": "neutral",
+        "displayName": "Manuscript Paper",
+        "canonical": "#FBFBF9",
+        "tonalRamp": ["#787878", "#999998", "#BABAB8", "#DADAD9", "#FDFDFC", "#FEFEFD", "#FEFEFE", "#FFFFFE"]
+      },
+      "sheet-paper": {
+        "role": "neutral",
+        "displayName": "Pinned A4 Sheet",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#7A7A7A", "#9C9C9C", "#BDBDBD", "#DEDEDE", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"]
+      },
+      "carbon-ink": {
+        "role": "neutral",
+        "displayName": "Carbon Ink",
+        "canonical": "#18191B",
+        "tonalRamp": ["#0C0C0D", "#0F0F10", "#121314", "#151617", "#979898", "#B0B1B1", "#CACACB", "#E3E3E4"]
+      },
+      "muted-graphite": {
+        "role": "neutral",
+        "displayName": "Muted Graphite",
+        "canonical": "#3A3C42",
+        "tonalRamp": ["#1C1D20", "#232528", "#2B2C31", "#323439", "#A6A7AA", "#BCBDBF", "#D2D2D4", "#E7E8E8"]
+      },
+      "soft-graphite": {
+        "role": "neutral",
+        "displayName": "Soft Graphite",
+        "canonical": "#A8ABB2",
+        "tonalRamp": ["#515255", "#66686D", "#7C7F84", "#92959B", "#D8D9DC", "#E1E2E5", "#EBECED", "#F5F5F6"]
+      },
+      "hairline-stone": {
+        "role": "neutral",
+        "displayName": "Hairline Stone",
+        "canonical": "#D3D0C8",
+        "tonalRamp": ["#656460", "#817F7A", "#9C9A94", "#B8B5AE", "#EBEAE6", "#F0EFEC", "#F5F4F2", "#FAF9F8"]
+      },
+      "active-card-edge": {
+        "role": "neutral",
+        "displayName": "Active Card Edge",
+        "canonical": "#CFCBC2",
+        "tonalRamp": ["#63615D", "#7E7C76", "#999690", "#B4B1A9", "#E9E8E4", "#EFEDEA", "#F4F3F1", "#F9F9F8"]
+      },
+      "editorial-cobalt": {
+        "role": "primary",
+        "displayName": "Editorial Cobalt",
+        "canonical": "#1E4D8C",
+        "tonalRamp": ["#0E2543", "#122F55", "#163968", "#1A437A", "#9AAFCB", "#B3C2D8", "#CBD6E5", "#E4EAF1"]
+      },
+      "cobalt-hover": {
+        "role": "primary",
+        "displayName": "Cobalt Hover",
+        "canonical": "#183F72",
+        "tonalRamp": ["#0C1E37", "#0F2646", "#122F54", "#153763", "#97A9C0", "#B0BECF", "#CAD3DF", "#E3E8EE"]
+      },
+      "cobalt-pressed": {
+        "role": "primary",
+        "displayName": "Cobalt Pressed",
+        "canonical": "#12345F",
+        "tonalRamp": ["#09192E", "#0B203A", "#0D2646", "#102D53", "#94A4B7", "#AEBAC9", "#C8D0DA", "#E3E7EC"]
+      },
+      "cobalt-disabled": {
+        "role": "primary",
+        "displayName": "Cobalt Disabled",
+        "canonical": "#B8C4D4",
+        "tonalRamp": ["#585E66", "#707881", "#88919D", "#A0ABB8", "#DFE4EC", "#E7EBF0", "#EFF1F5", "#F6F8FA"]
+      },
+      "proof-vermilion": {
+        "role": "semantic",
+        "displayName": "Proof Vermilion",
+        "canonical": "#C43B2B",
+        "tonalRamp": ["#5E1C15", "#78241A", "#912C20", "#AB3325", "#E4A7A0", "#EBBCB7", "#F1D2CE", "#F8E7E6"]
+      },
+      "dialect-ochre": {
+        "role": "semantic",
+        "displayName": "Dialect Ochre",
+        "canonical": "#9E4B16",
+        "tonalRamp": ["#4C240B", "#602E0D", "#753810", "#894113", "#D3AE96", "#DEC2B0", "#E9D6C9", "#F3E9E3"]
+      },
+      "pill-fill": {
+        "role": "neutral",
+        "displayName": "Pill Fill",
+        "canonical": "#F3F3F3",
+        "tonalRamp": ["#757575", "#949494", "#B4B4B4", "#D3D3D3", "#FAFAFA", "#FBFBFB", "#FCFCFC", "#FEFEFE"]
+      },
+      "pill-border": {
+        "role": "neutral",
+        "displayName": "Pill Border",
+        "canonical": "#E3E3E3",
+        "tonalRamp": ["#6D6D6D", "#8A8A8A", "#A8A8A8", "#C5C5C5", "#F2F2F2", "#F5F5F5", "#F9F9F9", "#FCFCFC"]
+      },
+      "heading-rule": {
+        "role": "neutral",
+        "displayName": "Heading Rule",
+        "canonical": "#D0D3D8",
+        "tonalRamp": ["#646568", "#7F8184", "#9A9CA0", "#B5B8BC", "#EAEBED", "#EFF0F2", "#F4F5F6", "#F9FAFA"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Resume Name",
+        "purpose": "The candidate name at the top of the A4 Sheet."
+      },
+      "headline": {
+        "displayName": "Section Heading",
+        "purpose": "Resume sections with the full-width hairline rule."
+      },
+      "title": {
+        "displayName": "Project Subhead",
+        "purpose": "Third-level resume headings inside a section."
+      },
+      "body": {
+        "displayName": "Resume Body",
+        "purpose": "Resume paragraphs, list items, and inline emphasis."
+      },
+      "label": {
+        "displayName": "Shell Label",
+        "purpose": "Native toolbar actions and Layout Profile field labels."
+      },
+      "mono": {
+        "displayName": "Source and Metrics",
+        "purpose": "Markdown source, page counters, and spatial measurements."
+      }
+    },
+    "shadows": [
+      {
+        "name": "active-card",
+        "value": "0 1px 3px rgba(24, 25, 27, 0.06)",
+        "purpose": "Lifts the active document card from the sidebar tray."
+      },
+      {
+        "name": "a4-sheet",
+        "value": "0 6px 20px rgba(24, 25, 27, 0.08)",
+        "purpose": "Separates the white A4 Sheet from the proofing-stage tray."
+      },
+      {
+        "name": "popover",
+        "value": "0 6px 20px rgba(0, 0, 0, 0.18)",
+        "purpose": "Native mygo/ui popover elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "preview-debounce",
+        "value": "180ms",
+        "purpose": "Rests typing before refreshing the live DOM preview."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-rail",
+        "value": ">1280px"
+      },
+      {
+        "name": "auto-collapsed-rail",
+        "value": "<=1280px"
+      },
+      {
+        "name": "minimum-window",
+        "value": "960x640"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Export Button",
+      "kind": "button",
+      "refersTo": "button-export",
+      "description": "Cobalt primary action opening a native PDF, PNG, and Markdown menu with hover, pressed, focus, and keyboard states.",
+      "html": "<button class=\"ds-export\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 9.5v3.5h9V9.5\"/><path d=\"M8 9.5v-7M5.5 5 8 2.5 10.5 5\"/></svg><span>导出</span></button>",
+      "css": ".ds-export{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:0;border-radius:4px;background:#1E4D8C;color:#FFFFFF;font:600 12px/1 \"PingFang SC\",\"Noto Sans CJK SC\",sans-serif;cursor:pointer}.ds-export svg{width:13px;height:13px}.ds-export:hover{background:#183F72}.ds-export:active{background:#12345F}.ds-export:focus-visible{outline:2px solid #1E4D8C;outline-offset:1px}.ds-export:disabled{background:#B8C4D4;cursor:default}"
+    },
+    {
+      "name": "Smart One-Page Toggle",
+      "kind": "button",
+      "refersTo": "toggle-smart-active",
+      "description": "Turns the deterministic one-page fit on or off without shrinking type.",
+      "html": "<button class=\"ds-smart\" aria-pressed=\"true\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 2.5h6L13 6v7.5h-9.5z\"/><path d=\"M9.5 2.5V6H13\"/><path d=\"m6.2 9 1.3 1.3 2.5-2.6\"/></svg><span>智能一页</span></button>",
+      "css": ".ds-smart{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #1E4D8C;border-radius:4px;background:#1E4D8C;color:#FFFFFF;font:500 12px/1 \"PingFang SC\",\"Noto Sans CJK SC\",sans-serif;cursor:pointer}.ds-smart svg{width:13px;height:13px}.ds-smart:focus-visible{outline:2px solid #1E4D8C;outline-offset:1px}.ds-smart[aria-pressed=\"false\"]{background:#FBFBF9;border-color:#D3D0C8;color:#18191B}"
+    },
+    {
+      "name": "Layout Toolbar Button",
+      "kind": "button",
+      "refersTo": "button-toolbar",
+      "description": "Neutral trigger for the Layout Profile popover.",
+      "html": "<button class=\"ds-layout\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 4h7M12.5 4h1M2.5 8h2M7.5 8h6M2.5 12h5M10.5 12h3\"/><circle cx=\"10.8\" cy=\"4\" r=\"1.4\"/><circle cx=\"5.8\" cy=\"8\" r=\"1.4\"/><circle cx=\"8.8\" cy=\"12\" r=\"1.4\"/></svg><span>排版</span></button>",
+      "css": ".ds-layout{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid transparent;border-radius:4px;background:transparent;color:#18191B;font:500 12px/1 \"PingFang SC\",\"Noto Sans CJK SC\",sans-serif;cursor:pointer}.ds-layout svg{width:13px;height:13px}.ds-layout:hover{background:#E9E7E2}.ds-layout:active{background:#D3D0C8}.ds-layout:focus-visible{outline:2px solid #1E4D8C;outline-offset:1px}"
+    },
+    {
+      "name": "Active Document Card",
+      "kind": "card",
+      "refersTo": "document-card-active",
+      "description": "Raised manuscript-surface card for the current Resume Document.",
+      "html": "<button class=\"ds-doc\" aria-current=\"true\">示例简历.md</button>",
+      "css": ".ds-doc{display:flex;align-items:center;width:204px;height:38px;padding:0 10px;border:1px solid #CFCBC2;border-radius:4px;background:#FBFBF9;color:#18191B;box-shadow:0 1px 3px rgba(24,25,27,.06);font:400 12.5px/1 \"PingFang SC\",\"Noto Sans CJK SC\",sans-serif;text-align:left;cursor:pointer}.ds-doc:focus-visible{outline:2px solid #1E4D8C;outline-offset:1px}"
+    },
+    {
+      "name": "Layout Profile Popover",
+      "kind": "custom",
+      "refersTo": "popover-panel",
+      "description": "Compact spatial settings panel with centered numeric values, drawn step icons, and no font-size control.",
+      "html": "<section class=\"ds-popover\"><label>字体 <span class=\"ds-segments\"><button>经典</button><button aria-pressed=\"true\">思源</button><button>衬线</button><button>系统</button></span></label><div class=\"ds-fields\"><label>分节间距 <input value=\"12\"><span>px</span></label><label>条目间距 <input value=\"5\"><span>px</span></label><label>上边距 <input value=\"10\"><span>mm</span></label><label>下边距 <input value=\"10\"><span>mm</span></label></div><label>行高 <input value=\"1.40\"><span>×</span></label><div class=\"ds-rule\"></div><div class=\"ds-actions\"><button>设为全局默认</button><button>设为当前简历</button><button>清除当前覆盖</button><button>恢复默认</button></div></section>",
+      "css": ".ds-popover{width:340px;padding:14px;border:1px solid #D3D0C8;border-radius:4px;background:#FBFBF9;color:#18191B;box-shadow:0 6px 20px rgba(0,0,0,.18);font:12px/1.4 \"PingFang SC\",\"Noto Sans CJK SC\",sans-serif}.ds-popover label{display:flex;flex-direction:column;gap:4px;font-weight:500}.ds-popover .ds-segments{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #D3D0C8;border-radius:4px;overflow:hidden}.ds-popover .ds-segments button{padding:6px;border:0;background:#FBFBF9;font:inherit}.ds-popover .ds-segments button[aria-pressed=\"true\"]{background:#1E4D8C;color:#FFF}.ds-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ds-popover input{width:100%;height:28px;padding:0 8px;border:1px solid #D3D0C8;border-radius:4px;background:#FFF;font:12px \"JetBrains Mono\",monospace;text-align:center}.ds-rule{height:1px;margin-top:2px;background:#D3D0C8}.ds-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ds-actions button{height:30px;border:1px solid #D3D0C8;border-radius:4px;background:#FBFBF9;font:500 12px \"PingFang SC\",sans-serif}"
+    },
+    {
+      "name": "Page Counter",
+      "kind": "chip",
+      "refersTo": "page-counter",
+      "description": "Compact A4 Sheet count parked outside the paper.",
+      "html": "<span class=\"ds-counter\">1 / 2</span>",
+      "css": ".ds-counter{display:inline-flex;align-items:center;height:24px;padding:0 10px;border:1px solid #D3D0C8;border-radius:12px;background:#FBFBF9;color:#C43B2B;font:500 11px/1 \"JetBrains Mono\",monospace;font-variant-numeric:tabular-nums}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Editorial Proofing Desk (铅字校样台)",
+    "overview": "tokicv treats resume authoring as proofing a crisp printed sheet on a calm, daylight-balanced editorial desk. Built on mygo/ui native desktop controls wrapping an embedded ui.WebView, the application shell stays intentionally quiet—warm-ash structural surfaces and 1px hairline rules frame an uncluttered manuscript editor and a pure white A4 Sheet resting on the proofing-stage tray.\n\nExpression relies on spatial hierarchy, surface contrast, and single-purpose icons rather than decorative labels or explanatory chrome. The desktop shell never competes with the white A4 Sheet, whose typography is pinned 1:1. Editorial cobalt and proof vermilion act strictly as disciplined proofing marks for active state, primary export, overflow, and syntax diagnostics.",
+    "keyCharacteristics": [
+      "Quiet warm-ash workbed that makes the pure white A4 Sheet the unmistakable optical anchor.",
+      "Strict zero-redundancy expression: no explanatory subheadings, no duplicated status prose, no decorative dots or colored edge stripes.",
+      "Clear separation between application shell styling (mygo/ui) and pinned resume rendering (ui.WebView).",
+      "Shared HTML, PrintToPDF, and pdfjs-dist pipeline keeps DOM preview, PDF, and PNG page geometry aligned."
+    ],
+    "rules": [
+      {
+        "name": "The One-Signal-Per-State Rule",
+        "body": "Every state—active document, 智能一页 enabled, page count, overflow—is communicated once through a single style change, icon, or compact counter.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Desk Rule",
+        "body": "Editorial Cobalt and Proof Vermilion together occupy under 10% of the desktop chrome; inactive controls stay neutral on the toolbar and rail.",
+        "section": "colors"
+      },
+      {
+        "name": "The Locked Sheet Scale Rule",
+        "body": "No font-size controls exist in the toolbar or Layout Profile. Font stack, spacing, margins, and readable-bound line height are the only adjustable typography inputs.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do keep control labels concise and express states through a single fill, color, or icon change.",
+      "Do keep the page counter outside the A4 footprint in the lower-right stage margin.",
+      "Do preserve the full A4 Sheet and toolbar at 1280×800 through 1920×1080 without window zoom.",
+      "Do keep layout and Smart One-Page changes non-destructive: only WebView CSS, print layout, and layouts.json may change.",
+      "Do use bundled vector icons with consistent 1.25px strokes."
+    ],
+    "donts": [
+      "Don't add explanatory subheadings, kickers, or redundant status text such as 校样工作台, 本地简历库, 已保存, or 行列号.",
+      "Don't place colored vertical stripes or unexplained status dots on sidebar cards.",
+      "Don't expose font-size sliders, inputs, or menu items anywhere in the desktop shell or Layout Profile.",
+      "Don't force-shrink below the 1.20 line-height floor; retain the multi-page baseline and show the single readability-limit notice.",
+      "Don't introduce emoji or raster glyphs as UI icons."
+    ]
+  }
+}

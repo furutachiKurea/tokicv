@@ -1,0 +1,35 @@
+# Local agent task tracking & runtime state
+.scratch/
+.impeccable/config.local.json
+
+# Go & MyGo build / test artifacts
+/tokicv
+/bin/
+/build/
+/.mygo/
+mygo_windows_*.syso
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.*
+
+# Node / asset staging
+node_modules/
+.npm/
+
+# Temporary & log files
+*.log
+*.tmp
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
