@@ -1,12 +1,21 @@
 {
   "name": "tokicv",
   "identifier": "com.example.tokicv",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "AGPL-3.0-only",
   "resources": [
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "LICENSES"
   ],
-  "out": "build"
+  "out": "build",
+  "linux": {
+    "maintainer": "kurea <z8700@foxmail.com>",
+    "comment": "Local Markdown resume workspace with live A4 preview and PDF/PNG export",
+    "categories": [
+      "Office",
+      "Utility"
+    ],
+    "command": "tokicv"
+  }
 }

@@ -13,20 +13,26 @@ import (
 )
 
 func TestRunVersionAndHelpWithoutExporter(t *testing.T) {
+	const version = "test-version"
 	for _, tc := range []struct {
 		name string
 		args []string
 		want string
 	}{
-		{"version", []string{"--version"}, "tokicv " + Version + "\n"},
+		{"version", []string{"--version"}, "tokicv " + version + "\n"},
 		{"help", []string{"--help"}, "用法:"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
 			called := false
-			code := Run(tc.args, &stdout, &stderr, func(ExportRequest) error {
-				called = true
-				return nil
+			code := RunWithOptions(tc.args, RunOptions{
+				Version: version,
+				Stdout:  &stdout,
+				Stderr:  &stderr,
+				Export: func(ExportRequest) error {
+					called = true
+					return nil
+				},
 			})
 
 			if code != 0 {

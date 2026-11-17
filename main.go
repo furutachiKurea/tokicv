@@ -12,10 +12,12 @@ import (
 )
 
 func main() {
+	version := resolveVersion(mygo.App.Version())
 	mygo.App.SetName("tokicv")
-	mygo.App.SetVersion(cli.Version)
+	mygo.App.SetVersion(version)
 
 	os.Exit(cli.RunWithOptions(os.Args[1:], cli.RunOptions{
+		Version:         version,
 		Stdin:           os.Stdin,
 		StdinRedirected: stdinRedirected(),
 		Stdout:          os.Stdout,

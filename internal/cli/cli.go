@@ -19,11 +19,10 @@ import (
 	"tokicv/internal/render"
 )
 
-// Version is the tokicv release version.
-const Version = "0.1.1"
-
 // DefaultTimeout is the default rendering timeout.
 const DefaultTimeout = 30 * time.Second
+
+const developmentVersion = "dev"
 
 // FontStack is the Resume Sheet font family selected by the CLI.
 type FontStack = render.FontStack
@@ -156,6 +155,7 @@ type LayoutView struct {
 // RunOptions configures command execution. Store may be nil for commands that
 // need the default library, which is opened lazily only when required.
 type RunOptions struct {
+	Version         string
 	Stdin           io.Reader
 	StdinRedirected bool
 	Stdout          io.Writer
@@ -230,7 +230,11 @@ func RunWithOptions(args []string, opts RunOptions) int {
 	case CommandHelp:
 		fmt.Fprintln(opts.Stdout, usageText)
 	case CommandVersion:
-		fmt.Fprintf(opts.Stdout, "tokicv %s\n", Version)
+		version := strings.TrimSpace(opts.Version)
+		if version == "" {
+			version = developmentVersion
+		}
+		fmt.Fprintf(opts.Stdout, "tokicv %s\n", version)
 	case CommandList:
 		return runList(opts, command.List)
 	case CommandCreate:

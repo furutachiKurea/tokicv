@@ -73,8 +73,9 @@ go tool mygo build -platform windows/amd64 -skip-installer
 - **产物目录**：`build/<平台>-<架构>/`（输出根目录由 [mygo.json](mygo.json) 配置）
 - **已验证的 Linux 产物（`build/linux-amd64/`）**：
   - 可执行文件：`tokicv`
-  - 安装与发行包：`tokicv-0.1.1-linux-amd64.tar.gz`、`install.sh`、`tokicv_0.1.1_amd64.deb`、`tokicv-0.1.1-1.x86_64.rpm`、Arch `PKGBUILD`
+  - 安装与发行包（文件名中的版本号由 [mygo.json](mygo.json) 的 `version` 决定）：`tokicv-<version>-linux-amd64.tar.gz`、`install.sh`、`tokicv_<version>_amd64.deb`、`tokicv-<version>-1.x86_64.rpm`、Arch `PKGBUILD`
   - 桌面集成与许可文件：`tokicv.desktop`、应用图标（`icon.png`、`tokicv.png`、`tokicv-256x256.png`、`tokicv-512x512.png`）、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`LICENSES/`
+  - 命令入口（由 [mygo.json](mygo.json) 的 `linux.command` 配置）：安装 `.deb`、`.rpm` 或通过 `PKGBUILD` 安装时，会创建 `/usr/bin/tokicv` 软链接；使用 `install.sh` 用户级安装时，会创建 `~/.local/bin/tokicv` 软链接（需确保 `~/.local/bin` 在 `PATH` 中），安装后即可在终端直接运行 `tokicv`
 - **交叉生成边界**：在 Linux 宿主机上已可交叉生成 `build/darwin-arm64/tokicv.app` 与 `build/windows-amd64/tokicv.exe`（及随附资源文件），但 `.dmg` 磁盘镜像与苹果签名受限于 macOS 宿主机，Windows NSIS 安装器在未安装 `makensis` 的 Linux 环境下无法生成；且 macOS 与 Windows 产物均尚未在对应系统实机运行验证
 
 ## Resume Dialect 语法
