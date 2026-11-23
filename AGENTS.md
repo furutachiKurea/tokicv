@@ -18,3 +18,7 @@
 ### Verification
 
 统一验证入口为 `scripts/verify.sh fast|graphics|full`；门禁、报告、产物与诊断日志生命周期见 `docs/verification.md`
+
+### 需求交付
+
+收到 TokiCV 实现需求时，默认按 `docs/agents/delivery.md` 推进到审查、验证及 Linux 安装包。用户指定交付范围时，以其要求为准

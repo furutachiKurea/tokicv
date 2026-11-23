@@ -23,6 +23,7 @@ FAILURES=0
 REPORT_NOTES=()
 MODE=
 WORK=
+RUNTIME_TMP=
 LOG=
 FAST_LOG=
 GRAPHICS_LOG=
@@ -31,6 +32,10 @@ ACTIVE_LOG=
 KEEP=0
 
 cleanup() {
+	if [ -n "$RUNTIME_TMP" ] && [ -d "$RUNTIME_TMP" ]; then
+		chmod -R u+rwX "$RUNTIME_TMP" 2>/dev/null || true
+		find "$RUNTIME_TMP" -depth -delete 2>/dev/null || true
+	fi
 	if [ "$KEEP" = "0" ] && [ -d "$WORK" ]; then
 		chmod -R u+rwX "$WORK" 2>/dev/null || true
 		find "$WORK" -depth -delete 2>/dev/null || true
@@ -358,7 +363,9 @@ main() {
 	REPORT_NOTES=()
 	trap cleanup EXIT INT TERM
 
-	mkdir -p "$WORK/home" "$WORK/config" "$WORK/data" "$WORK/cache" "$WORK/tmp"
+	# D-Bus Unix sockets need a short path even when the report directory is deep.
+	RUNTIME_TMP=$(mktemp -d /tmp/tcv.XXXXXX) || return 1
+	mkdir -p "$WORK/home" "$WORK/config" "$WORK/data" "$WORK/cache" || return 1
 	local original_gomodcache original_gocache
 	original_gomodcache=${GOMODCACHE:-$(go env GOMODCACHE 2>/dev/null)}
 	original_gocache=${GOCACHE:-$(go env GOCACHE 2>/dev/null)}
@@ -366,7 +373,7 @@ main() {
 	export XDG_CONFIG_HOME="$WORK/config"
 	export XDG_DATA_HOME="$WORK/data"
 	export XDG_CACHE_HOME="$WORK/cache"
-	export TMPDIR="$WORK/tmp"
+	export TMPDIR="$RUNTIME_TMP"
 	export TZ=UTC
 	unset DISPLAY WAYLAND_DISPLAY WAYLAND_SOCKET GDK_BACKEND XDG_RUNTIME_DIR \
 		XDG_SESSION_TYPE DBUS_SESSION_BUS_ADDRESS XAUTHORITY

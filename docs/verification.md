@@ -12,6 +12,8 @@
 
 脚本先清除宿主图形环境变量。图形测试只连接测试进程在 `t.TempDir()` 或独立 runtime 目录内启动的 mutter、Xwayland 与 D-Bus。D-Bus 使用 `unix:path=<本次目录>/dbus.sock`，不创建 `/tmp/dbus-*`
 
+测试临时目录使用独立的短路径 `/tmp/tcv.*`，退出时清理。报告目录可以使用较深的路径
+
 `zh_CN.UTF-8` 与 `en_US.UTF-8` 必须真正生效。检查同时核对 UTF-8 charmap 与全部 locale 类别数据；`locale` 返回 0 但回退到 C 数据视为失败
 
 ## 报告与产物
