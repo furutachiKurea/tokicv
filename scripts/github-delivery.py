@@ -30,9 +30,20 @@ def issue_branch(number):
 
 def prepare(directory, number):
     if number == 0:
+        codex_home = directory / "codex-smoke"
+        codex_home.mkdir(exist_ok=True)
+        (codex_home / "config.toml").write_text(
+            'web_search = "disabled"\n'
+            "[features]\n"
+            "shell_tool = false\n"
+            "unified_exec = false\n"
+            "goals = false\n"
+            "view_image = false\n"
+            "multi_agent = false\n"
+        )
         prompt = (
-            "这是 GitHub Actions 的只读模型接入试跑。不要修改任何文件。"
-            "返回 status=complete 和 message=tokicv-model-ok。"
+            "这是 GitHub Actions 的连通性试跑。无需调用工具。"
+            '请直接结束本次执行，并在最终答复返回 JSON 对象 {"status":"complete","message":"tokicv-model-ok"}。'
         )
     else:
         owner = os.environ["GITHUB_REPOSITORY_OWNER"]

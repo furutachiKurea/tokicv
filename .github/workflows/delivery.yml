@@ -71,6 +71,7 @@ jobs:
           go-version-file: go.mod
       - name: Implement or check model access
         if: steps.issue.outputs.exists != 'true'
+        timeout-minutes: ${{ env.ISSUE == '0' && 2 || 30 }}
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
@@ -78,6 +79,7 @@ jobs:
           model: ${{ env.MODEL }}
           effort: ${{ env.EFFORT }}
           codex-version: 0.171.0
+          codex-home: ${{ env.ISSUE == '0' && format('{0}/codex-smoke', runner.temp) || '' }}
           sandbox: ${{ env.ISSUE == '0' && 'read-only' || 'workspace-write' }}
           prompt-file: ${{ runner.temp }}/implement.md
           output-file: ${{ runner.temp }}/implementation.json
