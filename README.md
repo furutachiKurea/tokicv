@@ -223,6 +223,7 @@ tokicv export <target> [--md <out.md>] [--pdf <out.pdf>] [--png <dest>] [--fit-o
 - [ADR 0001：桌面工作区与 A4 预览](docs/adr/0001-hybrid-native-ui-and-webview-renderer.md)
 - [ADR 0002：CLI 分页检查与导出](docs/adr/0002-headless-cli-export-via-offscreen-webview.md)
 - [ADR 0003：自包含简历库与路径无关 CLI](docs/adr/0003-self-contained-library-and-path-independent-cli.md)
+- [TokiCV 需求交付与 Linux 安装包](docs/agents/delivery.md)
 
 ## 许可证
 
