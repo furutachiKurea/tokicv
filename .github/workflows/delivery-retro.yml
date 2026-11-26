@@ -1,0 +1,150 @@
+name: TokiCV delivery retro
+
+on:
+  workflow_run:
+    workflows: ["TokiCV delivery"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      first_run:
+        description: First failed TokiCV delivery run ID
+        required: true
+        type: string
+      second_run:
+        description: Second failed TokiCV delivery run ID
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: >-
+    tokicv-delivery-retro-${{ github.event.workflow_run.id || inputs.first_run }}-${{ inputs.second_run || '' }}
+  cancel-in-progress: true
+
+env:
+  MODEL: deepseek-v4.1-flash
+  EFFORT: max
+  RESPONSES_URL: https://opencode.ai/inference/go/openai/v1/responses
+  TARGET_REPOSITORY: ${{ github.repository }}
+  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+  EVENT_NAME: ${{ github.event_name }}
+  CURRENT_RUN_ID: ${{ github.event.workflow_run.id || '' }}
+  FIRST_RUN_ID: ${{ inputs.first_run || '' }}
+  SECOND_RUN_ID: ${{ inputs.second_run || '' }}
+
+jobs:
+  collect:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       contains(fromJSON('["failure","cancelled","timed_out"]'), github.event.workflow_run.conclusion) &&
+       github.event.workflow_run.head_branch == github.event.repository.default_branch) ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.actor == github.repository_owner &&
+       github.triggering_actor == github.repository_owner &&
+       github.ref_name == github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      eligible: ${{ steps.collect.outputs.eligible }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Collect structured failures
+        id: collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/github-delivery-retro.py collect "$RUNNER_TEMP/retro"
+      - uses: actions/upload-artifact@v7
+        if: steps.collect.outputs.eligible == 'true'
+        with:
+          name: delivery-retro-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retro/
+          if-no-files-found: error
+          retention-days: 14
+
+  retro:
+    needs: collect
+    if: needs.collect.outputs.eligible == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: delivery-retro-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retro
+      - name: Analyze with DeepSeek
+        timeout-minutes: 8
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
+          responses-api-endpoint: ${{ env.RESPONSES_URL }}
+          model: ${{ env.MODEL }}
+          effort: ${{ env.EFFORT }}
+          codex-version: 0.171.0
+          codex-home: ${{ runner.temp }}/retro/codex
+          sandbox: read-only
+          prompt-file: ${{ runner.temp }}/retro/prompt.md
+          output-file: ${{ runner.temp }}/retro/proposal.json
+          output-schema: |
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "problem", "evidence", "improvement"],
+              "properties": {
+                "status": {"type": "string", "enum": ["proposal", "insufficient"]},
+                "problem": {"type": "string", "maxLength": 1200},
+                "evidence": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["run_id", "observation"],
+                    "properties": {
+                      "run_id": {"type": "integer"},
+                      "observation": {"type": "string", "maxLength": 600}
+                    }
+                  }
+                },
+                "improvement": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["summary", "files", "acceptance"],
+                  "properties": {
+                    "summary": {"type": "string", "maxLength": 1200},
+                    "files": {
+                      "type": "array",
+                      "maxItems": 10,
+                      "items": {"type": "string", "maxLength": 200}
+                    },
+                    "acceptance": {
+                      "type": "array",
+                      "maxItems": 10,
+                      "items": {"type": "string", "maxLength": 600}
+                    }
+                  }
+                }
+              }
+            }
+      - name: Write the one-page report
+        run: python3 scripts/github-delivery-retro.py validate "$RUNNER_TEMP/retro"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: delivery-retro-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retro/report.md
+          if-no-files-found: warn
+          retention-days: 14

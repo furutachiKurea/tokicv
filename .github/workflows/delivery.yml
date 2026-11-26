@@ -254,3 +254,6 @@ jobs:
           PACKAGE_RESULT: ${{ needs.package.result }}
           CANDIDATE: ${{ needs.implement.outputs.candidate }}
         run: python3 scripts/github-delivery.py report "$RUNNER_TEMP"
+      - name: Mark blocked review
+        if: needs.review.outputs.status == 'blocked'
+        run: exit 1
