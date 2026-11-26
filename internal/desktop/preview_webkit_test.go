@@ -23,6 +23,7 @@ import (
 
 const previewProbeMarker = "tokicv-preview-probe="
 const previewUpdateMarker = "tokicv-preview-update="
+const isolatedMutterStartupTimeout = 30 * time.Second
 
 type previewProbeReport struct {
 	Error              string   `json:"error,omitempty"`
@@ -395,7 +396,7 @@ func startHeadlessMutterAt(t *testing.T, monitor string) (string, string) {
 	cmd.Env = append(environmentWithout(
 		"DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "GDK_BACKEND",
 		"HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME",
-		"DBUS_SESSION_BUS_ADDRESS",
+		"DBUS_SESSION_BUS_ADDRESS", "MUTTER_DEBUG_KMS_THREAD_TYPE",
 	),
 		"HOME="+filepath.Join(root, "home"),
 		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
@@ -404,6 +405,7 @@ func startHeadlessMutterAt(t *testing.T, monitor string) (string, string) {
 		"XDG_RUNTIME_DIR="+root,
 		"WAYLAND_DISPLAY="+display,
 		"GDK_BACKEND=wayland",
+		"MUTTER_DEBUG_KMS_THREAD_TYPE=user",
 		"XDG_SESSION_TYPE=wayland",
 		"DBUS_SESSION_BUS_ADDRESS="+dbusAddress,
 		"GIO_USE_VFS=local",
@@ -422,7 +424,7 @@ func startHeadlessMutterAt(t *testing.T, monitor string) (string, string) {
 	})
 
 	socket := filepath.Join(root, display)
-	deadline := time.Now().Add(10 * time.Second)
+	deadline := time.Now().Add(isolatedMutterStartupTimeout)
 	for time.Now().Before(deadline) {
 		if _, err := os.Stat(socket); err == nil {
 			return root, display

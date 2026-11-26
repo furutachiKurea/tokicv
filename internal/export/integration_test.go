@@ -48,9 +48,10 @@ var (
 )
 
 const (
-	lockedBodyFontSizePT = 10.5
-	pdfFontSizeTolerance = 0.15
-	pdfLineStepTolerance = 0.75
+	lockedBodyFontSizePT         = 10.5
+	pdfFontSizeTolerance         = 0.15
+	pdfLineStepTolerance         = 0.75
+	isolatedMutterStartupTimeout = 30 * time.Second
 )
 
 func isolatedExportDBusConfig(runtimeDir string) []byte {
@@ -1120,6 +1121,7 @@ func requireGraphicalLinux(t *testing.T) {
 			"XDG_RUNTIME_DIR="+graphicsRuntime,
 			"WAYLAND_DISPLAY="+graphicsDisplay,
 			"GDK_BACKEND=wayland",
+			"MUTTER_DEBUG_KMS_THREAD_TYPE=user",
 			"GIO_USE_VFS=local",
 			"GSETTINGS_BACKEND=memory",
 			"DBUS_SESSION_BUS_ADDRESS="+graphicsAddress,
@@ -1134,7 +1136,7 @@ func requireGraphicalLinux(t *testing.T) {
 		}
 		graphicsProcess = cmd
 		socket := filepath.Join(graphicsRuntime, graphicsDisplay)
-		deadline := time.Now().Add(10 * time.Second)
+		deadline := time.Now().Add(isolatedMutterStartupTimeout)
 		for time.Now().Before(deadline) {
 			if _, err := os.Stat(socket); err == nil {
 				return
@@ -1311,17 +1313,18 @@ func isolatedEnv(temp string) []string {
 
 func environmentWithoutDisplay(env []string) []string {
 	skip := map[string]bool{
-		"DISPLAY":                  true,
-		"WAYLAND_DISPLAY":          true,
-		"XDG_RUNTIME_DIR":          true,
-		"GDK_BACKEND":              true,
-		"HOME":                     true,
-		"XDG_CONFIG_HOME":          true,
-		"XDG_DATA_HOME":            true,
-		"XDG_CACHE_HOME":           true,
-		"DBUS_SESSION_BUS_ADDRESS": true,
-		"GIO_USE_VFS":              true,
-		"GSETTINGS_BACKEND":        true,
+		"DISPLAY":                      true,
+		"WAYLAND_DISPLAY":              true,
+		"XDG_RUNTIME_DIR":              true,
+		"GDK_BACKEND":                  true,
+		"HOME":                         true,
+		"XDG_CONFIG_HOME":              true,
+		"XDG_DATA_HOME":                true,
+		"XDG_CACHE_HOME":               true,
+		"DBUS_SESSION_BUS_ADDRESS":     true,
+		"GIO_USE_VFS":                  true,
+		"GSETTINGS_BACKEND":            true,
+		"MUTTER_DEBUG_KMS_THREAD_TYPE": true,
 	}
 	out := make([]string, 0, len(env))
 	for _, entry := range env {

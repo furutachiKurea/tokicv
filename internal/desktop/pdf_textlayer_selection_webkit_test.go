@@ -139,11 +139,11 @@ func TestPDFJSTextLayerMouseSelectionCopiesExactText(t *testing.T) {
 	select {
 	case ready = <-pages.ready:
 	case message := <-pages.errors:
-		t.Fatalf("PDF.js text layer page: %s; browser log: %s", message, browserLog)
+		t.Fatalf("PDF.js text layer page: %s; %s", message, browserLogDetail(browserLog))
 	case <-browserExited:
-		t.Fatalf("MiniBrowser exited before the text layer was ready: %v; log: %s", *browserWaitErr, browserLog)
+		t.Fatalf("MiniBrowser exited before the text layer was ready: %v; %s", *browserWaitErr, browserLogDetail(browserLog))
 	case <-ctx.Done():
-		t.Fatalf("wait for PDF.js text layer: %v; browser log: %s", ctx.Err(), browserLog)
+		t.Fatalf("wait for PDF.js text layer: %v; %s", ctx.Err(), browserLogDetail(browserLog))
 	}
 	if ready.Error != "" {
 		t.Fatalf("PDF.js text layer: %s", ready.Error)
@@ -283,11 +283,11 @@ func waitForInputReport(
 	case report := <-pages.inputs:
 		return report
 	case message := <-pages.errors:
-		t.Fatalf("%s: PDF.js text layer page: %s", name, message)
+		t.Fatalf("%s: PDF.js text layer page: %s; %s", name, message, browserLogDetail(browserLog))
 	case <-browserExited:
-		t.Fatalf("%s: MiniBrowser exited before mouse input: %v; log: %s", name, *browserWaitErr, browserLog)
+		t.Fatalf("%s: MiniBrowser exited before mouse input: %v; %s", name, *browserWaitErr, browserLogDetail(browserLog))
 	case <-ctx.Done():
-		t.Fatalf("%s: wait for mouse input report: %v; log: %s", name, ctx.Err(), browserLog)
+		t.Fatalf("%s: wait for mouse input report: %v; %s", name, ctx.Err(), browserLogDetail(browserLog))
 	}
 	return textLayerInputReport{}
 }
@@ -341,13 +341,29 @@ func waitForCopyReport(
 	case report := <-pages.copies:
 		return report
 	case message := <-pages.errors:
-		t.Fatalf("%s: PDF.js text layer page: %s", name, message)
+		t.Fatalf("%s: PDF.js text layer page: %s; %s", name, message, browserLogDetail(browserLog))
 	case <-browserExited:
-		t.Fatalf("%s: MiniBrowser exited before copy: %v; log: %s", name, *browserWaitErr, browserLog)
+		t.Fatalf("%s: MiniBrowser exited before copy: %v; %s", name, *browserWaitErr, browserLogDetail(browserLog))
 	case <-ctx.Done():
-		t.Fatalf("%s: wait for copy event: %v; log: %s", name, ctx.Err(), browserLog)
+		t.Fatalf("%s: wait for copy event: %v; %s", name, ctx.Err(), browserLogDetail(browserLog))
 	}
 	return textLayerCopyReport{}
+}
+
+func browserLogDetail(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Sprintf("browser log %s unreadable: %v", path, err)
+	}
+	const maxBytes = 8 << 10
+	if len(data) > maxBytes {
+		data = append([]byte("[truncated]\n"), data[len(data)-maxBytes:]...)
+	}
+	text := strings.TrimSpace(string(data))
+	if text == "" {
+		text = "<empty>"
+	}
+	return fmt.Sprintf("browser log %s:\n%s", path, text)
 }
 
 func waitForClipboard(t *testing.T, display *isolatedX11Display, expected string) string {
@@ -476,7 +492,6 @@ func startTextLayerBrowser(
 	cmdArgs := []string{
 		"--private",
 		"--full-screen",
-		"--profile-dir=" + filepath.Join(profile, "profile"),
 		url,
 	}
 	cmd := exec.Command(browser, cmdArgs...)
@@ -556,7 +571,7 @@ func startIsolatedX11(t *testing.T) *isolatedX11Display {
 	cmd.Env = append(environmentWithout(
 		"DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "GDK_BACKEND",
 		"HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME",
-		"DBUS_SESSION_BUS_ADDRESS",
+		"DBUS_SESSION_BUS_ADDRESS", "MUTTER_DEBUG_KMS_THREAD_TYPE",
 	),
 		"HOME="+filepath.Join(root, "home"),
 		"XDG_CONFIG_HOME="+filepath.Join(root, "config"),
@@ -565,6 +580,7 @@ func startIsolatedX11(t *testing.T) *isolatedX11Display {
 		"XDG_RUNTIME_DIR="+display.runtimeDir,
 		"WAYLAND_DISPLAY="+display.waylandName,
 		"GDK_BACKEND=wayland",
+		"MUTTER_DEBUG_KMS_THREAD_TYPE=user",
 		"GIO_USE_VFS=local",
 		"GSETTINGS_BACKEND=memory",
 		"DBUS_SESSION_BUS_ADDRESS="+display.dbusAddress,
@@ -585,7 +601,7 @@ func startIsolatedX11(t *testing.T) *isolatedX11Display {
 
 	displayPattern := regexp.MustCompile(`Using public X11 display :([0-9]+)`)
 	var authPattern = filepath.Join(root, ".mutter-Xwaylandauth.*")
-	deadline := time.Now().Add(12 * time.Second)
+	deadline := time.Now().Add(isolatedMutterStartupTimeout)
 	for time.Now().Before(deadline) {
 		data, _ := os.ReadFile(logPath)
 		match := displayPattern.FindSubmatch(data)
