@@ -83,7 +83,10 @@ jobs:
           sandbox: ${{ env.ISSUE == '0' && 'read-only' || 'workspace-write' }}
           prompt-file: ${{ runner.temp }}/implement.md
           output-file: ${{ runner.temp }}/implementation.json
-          output-schema: '{"type":"object","properties":{"status":{"type":"string","enum":["ready","needs_decision","needs_design","complete"]},"message":{"type":"string"}},"required":["status","message"],"additionalProperties":false}'
+          output-schema-file: >-
+            ${{ env.ISSUE == '0' &&
+            format('{0}/implementation-smoke.schema.json', runner.temp) ||
+            format('{0}/implementation.schema.json', runner.temp) }}
       - name: Record the candidate
         id: result
         run: |
@@ -121,14 +124,11 @@ jobs:
         run: |
           git fetch "$RUNNER_TEMP/candidate/change.bundle" refs/heads/tokicv-candidate
           test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE"
-          {
-            printf '审查 TokiCV 提交 %s 相对于 %s 的差异。核对 AGENTS.md、需求和验收条件。\n' "$CANDIDATE" "$BASE"
-            printf '只报告具体阻塞项。通过返回 pass，有阻塞返回 blocked。请勿编辑文件。\n\n'
-            cat "$RUNNER_TEMP/candidate/issue.json"
-          } >"$RUNNER_TEMP/review.md"
+          python3 scripts/github-delivery.py review-prompt "$RUNNER_TEMP"
         env:
           CANDIDATE: ${{ needs.implement.outputs.candidate }}
       - name: Review with DeepSeek
+        timeout-minutes: 5
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
@@ -136,6 +136,7 @@ jobs:
           model: ${{ env.MODEL }}
           effort: ${{ env.EFFORT }}
           codex-version: 0.171.0
+          codex-home: ${{ runner.temp }}/codex-review
           sandbox: read-only
           prompt-file: ${{ runner.temp }}/review.md
           output-file: ${{ runner.temp }}/review.json
