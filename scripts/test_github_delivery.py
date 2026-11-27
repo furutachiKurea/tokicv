@@ -406,6 +406,10 @@ class DeliveryTest(unittest.TestCase):
 
         self.assertIn("name: TokiCV delivery", parent)
         self.assertIn("startsWith(github.event.comment.body, '/tokicv')", parent)
+        intake_step = parent.split("- name: Resolve the canonical issue", 1)[1].split(
+            "\n  delivery:", 1,
+        )[0]
+        self.assertIn("DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}", intake_step)
         self.assertNotIn("\nconcurrency:", parent)
         self.assertIn("uses: ./.github/workflows/delivery-run.yml", parent)
         self.assertIn("group: tokicv-delivery-${{ inputs.issue }}", called)
