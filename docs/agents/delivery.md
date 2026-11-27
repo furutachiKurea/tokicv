@@ -13,6 +13,18 @@
 - 极端复杂的需求先由 Codex 在工单写清待设计的问题。仓库所有者决定是否用有可用额度的官方 Codex 或 Google Gemini 产品做设计，必要时用同一产品做一次验收。把设计结论用 `/tokicv` 回复到工单，后续实现和独立审查仍走 DeepSeek。官方订阅的授权与运行在各自的产品里完成
 - 首次接入时，向 `factory/tokicv-delivery` 分支推送可试跑模型和打包，产物位于 Actions 的 Artifacts。正式启用后，仓库所有者也可在 Actions 手动运行，工单编号填 `0` 只试跑模型接入和现有提交的打包。工单交付需要仓库允许 GitHub Actions 创建草稿 PR
 
+## 架构预检与审查
+
+实现器在修改文件前读取 `GLOSSARY.md`、`AGENTS.md`、`docs/agents/domain.md` 和 `docs/adr/` 中与工单相关的 ADR。ADR 数量较少时可先全部浏览再按相关性采用。按工单涉及的行为变动、难复现故障、模块设计或术语/ADR 变更，读取 `.agents/skills/README.md` 指向的 `tdd`、`diagnosing-bugs`、`codebase-design`、`domain-modeling` 相关章节；涉及 MyGo UI 或渲染时，显式读取 `.agents/skills/mygo-maintenance/SKILL.md`。技能只从仓库内读取，由 Actions 自动执行，上游的用户确认、并行子代理、写文件和创建 Issue/PR 步骤由工单时间线与工厂流程替代。实现前先搜索并复用已有模块，保持职责边界。需求、验收条件或方案与 ADR、术语冲突，或需要改变既有架构决策时，实现器返回 `needs_decision` 作为重大决策，引用具体规则、冲突影响和选项，不能自行绕过
+
+独立审查仍使用 OpenCode Go 的 DeepSeek V4.1 Flash `max`，在无 shell 的只读环境执行，并作为打包前门禁。审查输入包含可信基线的全部 ADR、术语和仓库规则、`code-review` 技能中关于 spec 来源、standards 来源和 smell baseline 的原文节选，以及候选 diff；规则按相关性判断。上游的询问用户、并行子代理和报告生成步骤由既有审查 schema 替代。阻塞项必须对应具体规则违规、可验证的重复实现或职责错放，给出候选文件、行为和修复要求。没有具体证据时不能因风格偏好、推测性未来需求或可另做的重构返回 `blocked`
+
+## 架构巡检
+
+架构巡检每周运行一次，仓库所有者也可在 Actions 手动运行。巡检使用 DeepSeek V4.1 Flash `max`，只读且无 shell，读取最近七天默认分支上的有界提交证据、现有 ADR 和术语规则，以及 `improve-codebase-architecture` 的 Explore、`codebase-design` 的 Glossary/Depth/Seam/Deletion test 和 `domain-modeling` 的术语一致性原文节选。上游的交互、子代理、HTML 报告和写入步骤由巡检 schema 替代。没有近期非空变更时跳过模型
+
+巡检最多提出三条有提交证据的架构建议，写入 Actions Summary 和保留 30 天的 artifact。建议由仓库所有者决定是否按正常交付流程处理；巡检不创建 Issue 或 PR、不修改源代码，也不改变发布权限
+
 ## 本地交付
 
 1. **接收需求**。从当前 TokiCV 对话或已有的本地 Markdown 工单获取需求，明确可观察的验收条件。新增功能取得仓库改动授权后，按 [本地任务跟踪约定](issue-tracker.md) 将规格和任务建档。常规实现细节自行决定。若选择会改变默认行为、已有数据的兼容性或交付范围，且需求和已有决策都无法确定方向，列出具体选项与影响，将本次运行停在该决策处。用户答复后以同一条需求继续
@@ -23,7 +35,7 @@
 
 ## 交付复盘
 
-GitHub 交付结束后，复盘任务检查最近 30 条交付记录。同一工单的同一 job 和 step 第二次失败时，用 DeepSeek V4.1 Flash `max` 对照两次运行。仓库所有者也可手动指定两条默认分支的工单失败记录。报告在 Actions 的 **TokiCV delivery retro** 运行摘要和报告制品中，保留 14 天
+GitHub 交付结束后，复盘任务在只读且无 shell 的环境中检查最近 30 条交付记录。同一工单的同一 job 和 step 第二次失败时，用 DeepSeek V4.1 Flash `max` 对照两次运行，并读取可信默认分支 `retro` 技能的检查分类、Implementation vs Review 和 Files 原文节选；上游的交互、会话日志检索和写入步骤由结构化证据与既有 schema 替代。仓库所有者也可手动指定两条默认分支的工单失败记录。报告在 Actions 的 **TokiCV delivery retro** 运行摘要和报告制品中，保留 14 天
 
 报告附两次运行链接。证据足够时只提出一项改进，写清拟改文件和验收条件；证据不足时记录缺少什么。仓库所有者决定是否把建议作为新需求交付。使用现有候选制品恢复的窗口为 7 天，安装包和验证报告保留 14 天
 

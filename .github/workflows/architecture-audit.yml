@@ -1,0 +1,100 @@
+name: TokiCV architecture audit
+
+on:
+  schedule:
+    # Monday 09:17 Asia/Shanghai
+    - cron: "17 1 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: tokicv-architecture-audit
+  cancel-in-progress: false
+
+env:
+  MODEL: deepseek-v4.1-flash
+  EFFORT: max
+  RESPONSES_URL: https://opencode.ai/inference/go/openai/v1/responses
+  TARGET_REPOSITORY: ${{ github.repository }}
+  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+
+jobs:
+  collect:
+    if: >-
+      (github.event_name == 'schedule' &&
+       github.ref_name == github.event.repository.default_branch) ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.actor == github.repository_owner &&
+       github.triggering_actor == github.repository_owner &&
+       github.ref_name == github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      eligible: ${{ steps.collect.outputs.eligible }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Collect bounded architecture evidence
+        id: collect
+        run: python3 scripts/architecture-audit.py collect "$RUNNER_TEMP/audit"
+      - uses: actions/upload-artifact@v7
+        if: steps.collect.outputs.eligible == 'true'
+        with:
+          name: architecture-audit-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/audit/
+          if-no-files-found: error
+          retention-days: 30
+
+  audit:
+    needs: collect
+    if: needs.collect.outputs.eligible == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: architecture-audit-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/audit
+      - name: Require the DeepSeek credential
+        env:
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+        run: |
+          if [[ -z "$OPENCODE_GO_API_KEY" ]]; then
+            echo "::error::Missing GitHub Actions secret OPENCODE_GO_API_KEY"
+            exit 1
+          fi
+      - name: Audit architecture with DeepSeek
+        timeout-minutes: 10
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
+          responses-api-endpoint: ${{ env.RESPONSES_URL }}
+          model: ${{ env.MODEL }}
+          effort: ${{ env.EFFORT }}
+          codex-version: 0.171.0
+          codex-home: ${{ runner.temp }}/audit/codex
+          sandbox: read-only
+          prompt-file: ${{ runner.temp }}/audit/prompt.md
+          output-file: ${{ runner.temp }}/audit/proposal.json
+          output-schema-file: ${{ runner.temp }}/audit/schema.json
+      - name: Validate and summarize the audit
+        run: python3 scripts/architecture-audit.py validate "$RUNNER_TEMP/audit"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: architecture-audit-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/audit/report.md
+          if-no-files-found: warn
+          retention-days: 30

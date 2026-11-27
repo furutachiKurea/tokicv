@@ -17,6 +17,9 @@ SPEC.loader.exec_module(RETRO)
 
 REPOSITORY = "owner/tokicv"
 BRANCH = "factory/tokicv-delivery"
+RETRO_SKILL_SOURCE = (
+    ROOT / ".agents/skills/retro/SKILL.md"
+).read_text()
 
 
 def make_run(
@@ -197,23 +200,39 @@ class DeliveryRetroTests(unittest.TestCase):
                 },
             }
             with mock.patch.object(RETRO, "GitHubAPI", return_value=api):
-                with mock.patch.dict(os.environ, environment, clear=False):
-                    RETRO.collect(directory)
-                    (directory / "proposal.json").write_text(
-                        json.dumps(proposal, ensure_ascii=False)
-                    )
-                    RETRO.validate(directory)
+                with mock.patch.object(
+                    RETRO, "document", return_value=RETRO_SKILL_SOURCE
+                ):
+                    with mock.patch.dict(os.environ, environment, clear=False):
+                        RETRO.collect(directory)
+                        (directory / "proposal.json").write_text(
+                            json.dumps(proposal, ensure_ascii=False)
+                        )
+                        RETRO.validate(directory)
 
             evidence = json.loads((directory / "evidence.json").read_text())
             self.assertNotIn("log", evidence["runs"][0])
             self.assertIn("eligible=true", output.read_text())
             self.assertIn("验收条件", summary.read_text())
-            self.assertIn("证据", (directory / "prompt.md").read_text())
+            prompt = (directory / "prompt.md").read_text()
+            self.assertIn("证据", prompt)
+            self.assertIn("Navigation", prompt)
+            self.assertIn("implementation agent has the most **context pressure**", prompt)
+            self.assertIn("`AGENTS.md`: these files are pushed", prompt)
+            self.assertNotIn("Call the Skill tool", prompt)
+            self.assertNotIn("Present these candidates", prompt)
             self.assertEqual(
                 (directory / "report.md").read_text(), summary.read_text()
             )
             config = (directory / "codex" / "config.toml").read_text()
             self.assertIn("shell_tool = false", config)
+            self.assertIn("multi_agent = false", config)
+
+    def test_retro_guidance_degrades_without_trusted_skill(self):
+        with mock.patch.object(RETRO, "document", return_value=""):
+            guidance = RETRO.retro_guidance()
+
+        self.assertIn("没有 retro 技能原文", guidance)
 
 
 if __name__ == "__main__":

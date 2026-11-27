@@ -243,6 +243,111 @@ class DeliveryTest(unittest.TestCase):
         self.assertNotIn("selected_option", prompt)
         self.assertEqual(self.outputs()["skip_implementation"], "false")
 
+    def test_implementation_prompt_requires_architecture_preflight(self):
+        completed = self.command("prompt")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        prompt = (self.work / "implement.md").read_text()
+        self.assertIn("GLOSSARY.md", prompt)
+        self.assertIn("docs/adr/", prompt)
+        self.assertIn(".agents/skills/mygo-maintenance/SKILL.md", prompt)
+        self.assertIn(".agents/skills/README.md", prompt)
+        self.assertIn("What a good test is", prompt)
+        self.assertIn("Phase 1 至 Phase 6", prompt)
+        self.assertIn("Deep vs shallow", prompt)
+        self.assertIn("Challenge against the glossary", prompt)
+        self.assertIn("用户确认、并行子代理", prompt)
+        self.assertIn("复用已有模块", prompt)
+        self.assertIn("needs_decision", prompt)
+
+    def test_review_prompt_uses_trusted_baseline_rules(self):
+        code_review = (
+            ROOT / ".agents/skills/code-review/SKILL.md"
+        ).read_text()
+        for path, content in {
+            "AGENTS.md": "# Agent rules\n\nRepository sentinel\n",
+            "GLOSSARY.md": "# Glossary\n\nBaseline term sentinel\n",
+            "docs/agents/domain.md": "# Domain\n\nDomain sentinel\n",
+            "docs/adr/0001-first.md": "# First ADR\n\nFirst architecture sentinel\n",
+            "docs/adr/0002-second.md": "# Second ADR\n\nSecond architecture sentinel\n",
+            ".agents/skills/mygo-maintenance/SKILL.md": (
+                "# MyGo rules\n\nMyGo maintenance sentinel\n"
+            ),
+            ".agents/skills/code-review/SKILL.md": code_review,
+        }.items():
+            target = self.repo / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content)
+        self.git("add", "AGENTS.md", "GLOSSARY.md", "docs", ".agents")
+        self.git("commit", "-m", "docs: add trusted architecture fixture")
+        self.base = self.git("rev-parse", "HEAD")
+        self.env["BASE"] = self.base
+
+        fixture = self.make_candidate()
+        self.git("switch", "tokicv-candidate")
+        (self.repo / "GLOSSARY.md").write_text(
+            "# Glossary\n\nCandidate term sentinel\n"
+        )
+        (self.repo / ".agents/skills/code-review/SKILL.md").write_text(
+            "# Code Review\n\nCandidate review sentinel\n"
+        )
+        self.git("add", "GLOSSARY.md", ".agents/skills/code-review/SKILL.md")
+        self.git("commit", "-m", "docs: replace glossary")
+        candidate = self.git("rev-parse", "HEAD")
+        self.git("switch", "main")
+        (self.repo / ".agents/skills/code-review/SKILL.md").write_text(
+            "# Code Review\n\nWorktree review sentinel\n"
+        )
+        self.copy_candidate_artifact(fixture)
+        (self.work / "candidate" / "issue.json").write_text(json.dumps({
+            "number": ISSUE,
+            "title": "测试交付",
+            "body": "实现一个可验证的测试功能",
+            "timeline": [],
+            "base": self.base,
+            "base_branch": "main",
+        }, ensure_ascii=False))
+
+        completed = self.command("review-prompt", {"CANDIDATE": candidate})
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        prompt = (self.work / "review.md").read_text()
+        baseline, diff = prompt.split("=== 候选 diff", 1)
+        self.assertIn("First architecture sentinel", baseline)
+        self.assertIn("Second architecture sentinel", baseline)
+        self.assertIn("Baseline term sentinel", baseline)
+        self.assertIn("Repository sentinel", baseline)
+        self.assertIn("Domain sentinel", baseline)
+        self.assertIn("MyGo maintenance sentinel", baseline)
+        self.assertIn("Mysterious Name", baseline)
+        self.assertIn("The repo overrides", baseline)
+        self.assertNotIn("ask the user where the spec is", baseline)
+        self.assertNotIn("Spawn both sub-agents", baseline)
+        self.assertNotIn("Candidate term sentinel", baseline)
+        self.assertNotIn("Candidate review sentinel", baseline)
+        self.assertNotIn("Worktree review sentinel", baseline)
+        self.assertIn("Candidate term sentinel", diff)
+        self.assertIn("Candidate review sentinel", diff)
+        self.assertIn("重复实现", prompt)
+        self.assertIn("职责错放", prompt)
+        self.assertIn("具体规则违规", prompt)
+        config = (self.work / "codex-review" / "config.toml").read_text()
+        self.assertIn("shell_tool = false", config)
+        self.assertIn("multi_agent = false", config)
+
+    def test_review_prompt_handles_baseline_before_skills(self):
+        fixture = self.make_candidate()
+        self.copy_candidate_artifact(fixture)
+
+        completed = self.command(
+            "review-prompt", {"CANDIDATE": fixture["candidate"]}
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        prompt = (self.work / "review.md").read_text()
+        self.assertIn("当前基线没有 code-review 技能原文", prompt)
+        self.assertIn("具体规则违规", prompt)
+
     def test_review_blocked_candidate_requires_append_then_accepts_it(self):
         fixture = self.make_candidate()
         state = self.recovery_state(fixture, "review_blocked", "缺少错误路径测试")
