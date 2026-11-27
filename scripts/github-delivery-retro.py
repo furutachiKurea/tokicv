@@ -11,7 +11,8 @@ import sys
 WORKFLOW_NAME = "TokiCV delivery"
 WORKFLOW_PATH = ".github/workflows/delivery.yml"
 FAILED = {"failure", "cancelled", "timed_out"}
-ISSUE = re.compile(r"TokiCV issue #([1-9][0-9]*)\Z")
+TARGET = re.compile(r"TokiCV (issue|PR) #([1-9][0-9]*)\Z")
+FACTORY_BRANCH = re.compile(r"factory/issue-([1-9][0-9]*)\Z")
 LIMIT = 30
 CONFIG = (
     'web_search = "disabled"\n[features]\n'
@@ -70,6 +71,27 @@ def number(value, label="run ID"):
     return result
 def state(item):
     return item.get("conclusion") or item.get("status") or "unknown"
+def canonical_issue(api, run, repo, branch):
+    match = TARGET.fullmatch(run.get("display_title") or "")
+    need(match, "run has no TokiCV issue or PR title")
+    if match.group(1) == "issue":
+        return int(match.group(2))
+    pull = api.get_pull(int(match.group(2)))
+    need(isinstance(pull, dict), "PR metadata is unavailable")
+    need(
+        (pull.get("base") or {}).get("ref") == branch,
+        "PR does not target the default branch",
+    )
+    head = (pull.get("head") or {})
+    need(
+        (head.get("repo") or {}).get("full_name", "").casefold() == repo.casefold(),
+        "PR is not from the same repository",
+    )
+    branch_match = FACTORY_BRANCH.fullmatch(head.get("ref") or "")
+    need(branch_match, "PR does not use a factory issue branch")
+    return int(branch_match.group(1))
+
+
 def run_data(api, run, repo, branch):
     need(isinstance(run, dict), "invalid run")
     valid = all((
@@ -80,8 +102,8 @@ def run_data(api, run, repo, branch):
         run.get("head_branch") == branch,
     ))
     need(valid, "run is not a failed default-branch TokiCV delivery")
-    match = ISSUE.fullmatch(run.get("display_title") or "")
-    need(match and str(run.get("html_url", "")).startswith("https://github.com/"), "run has no TokiCV issue title or link")
+    issue = canonical_issue(api, run, repo, branch)
+    need(str(run.get("html_url", "")).startswith("https://github.com/"), "run has no TokiCV link")
     identifier = number(run.get("id"))
     jobs = [job for job in api.get_jobs(identifier) if isinstance(job, dict) and state(job) in FAILED]
     need(jobs, "run has no failed job")
@@ -89,7 +111,7 @@ def run_data(api, run, repo, branch):
                                            for step in job.get("steps") or [])), jobs[0])
     step = next((step for step in job.get("steps") or []
                  if isinstance(step, dict) and state(step) in FAILED), None)
-    return {"id": identifier, "issue": int(match[1]), "url": run["html_url"], "conclusion": run["conclusion"],
+    return {"id": identifier, "issue": issue, "url": run["html_url"], "conclusion": run["conclusion"],
             "job": str(job.get("name") or f"job-{job.get('id', '?')}"),
             "step": str(step.get("name") or "unnamed step") if step else None}
 def auto_evidence(api, repo, branch, current_id):
@@ -101,14 +123,15 @@ def auto_evidence(api, repo, branch, current_id):
         return None, "automatic retro requires a failed step"
     matches = [current]
     for candidate in api.recent_runs()[:LIMIT]:
-        if (not isinstance(candidate, dict) or candidate.get("id") == current["id"]
-                or candidate.get("display_title") != f"TokiCV issue #{current['issue']}"):
+        if not isinstance(candidate, dict) or candidate.get("id") == current["id"]:
             continue
         try:
             item = run_data(api, candidate, repo, branch)
         except RetroError:
             continue
-        if (item["job"], item["step"]) == (current["job"], current["step"]):
+        if (item["issue"], item["job"], item["step"]) == (
+            current["issue"], current["job"], current["step"]
+        ):
             matches.append(item)
     if len(matches) != 2:
         return None, ("automatic retro requires exactly two failures with the same "
@@ -219,6 +242,8 @@ class GitHubAPI:
         data = self.get(f"repos/{self.repository}/actions/runs/{identifier}/jobs?per_page=100")
         need(isinstance(data.get("jobs"), list), "workflow job list is unavailable")
         return data["jobs"]
+    def get_pull(self, identifier):
+        return self.get(f"repos/{self.repository}/pulls/{identifier}")
     def get(self, path):
         value = json.loads(subprocess.check_output([
             "gh", "api", "--method", "GET",

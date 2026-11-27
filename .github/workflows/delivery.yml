@@ -1,7 +1,10 @@
 name: TokiCV delivery
 run-name: >-
-  ${{ (github.event.issue.number || inputs.issue) &&
-      format('TokiCV issue #{0}', github.event.issue.number || inputs.issue) || 'TokiCV smoke' }}
+  ${{ github.event.issue.pull_request &&
+      format('TokiCV PR #{0}', github.event.issue.number) ||
+      ((github.event.issue.number || inputs.issue) &&
+       format('TokiCV issue #{0}', github.event.issue.number || inputs.issue)) ||
+      'TokiCV smoke' }}
 
 on:
   push:
@@ -19,241 +22,52 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: tokicv-delivery-${{ github.event.issue.number || inputs.issue || 'smoke' }}
-  cancel-in-progress: false
-
-env:
-  ISSUE: ${{ github.event.issue.number || inputs.issue || 0 }}
-  BASE: ${{ github.sha }}
-  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-  CANDIDATE_ARTIFACT_NAME: candidate-${{ github.run_id }}-${{ github.run_attempt }}
-  MODEL: deepseek-v4.1-flash
-  EFFORT: max
-  RESPONSES_URL: https://opencode.ai/inference/go/openai/v1/responses
-
 jobs:
-  implement:
+  intake:
     if: >-
       github.actor == github.repository_owner &&
       github.triggering_actor == github.repository_owner &&
       (github.event_name != 'issue_comment' ||
-       (!github.event.issue.pull_request && startsWith(github.event.comment.body, '/tokicv'))) &&
+       startsWith(github.event.comment.body, '/tokicv')) &&
       (github.event_name != 'workflow_dispatch' || github.ref_type == 'branch')
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 3
     permissions:
       contents: read
-      issues: read
       pull-requests: read
-      actions: read
     outputs:
-      status: ${{ steps.result.outputs.status }}
-      candidate: ${{ steps.result.outputs.candidate }}
-      artifact: ${{ steps.upload.outputs.artifact-id }}
+      issue: ${{ steps.target.outputs.issue }}
+      target_kind: ${{ steps.target.outputs.target_kind }}
+      target_number: ${{ steps.target.outputs.target_number }}
+      comment_id: ${{ steps.target.outputs.comment_id }}
+      skip: ${{ steps.target.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
-      - name: Read the owner's issue and decisions
-        id: issue
+      - name: Resolve the canonical issue
+        id: target
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 scripts/github-delivery.py prompt "$RUNNER_TEMP"
-      - name: Require the DeepSeek credential
-        if: steps.issue.outputs.skip_implementation != 'true'
-        env:
-          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
-        run: |
-          if [[ -z "$OPENCODE_GO_API_KEY" ]]; then
-            echo "::error::Missing GitHub Actions secret OPENCODE_GO_API_KEY"
-            exit 1
-          fi
-      - uses: actions/setup-go@v6
-        if: env.ISSUE != '0' && steps.issue.outputs.skip_implementation != 'true'
-        with:
-          go-version-file: go.mod
-      - name: Implement or check model access
-        if: steps.issue.outputs.skip_implementation != 'true'
-        timeout-minutes: ${{ env.ISSUE == '0' && 2 || 30 }}
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
-          responses-api-endpoint: ${{ env.RESPONSES_URL }}
-          model: ${{ env.MODEL }}
-          effort: ${{ env.EFFORT }}
-          codex-version: 0.171.0
-          codex-home: ${{ env.ISSUE == '0' && format('{0}/codex-smoke', runner.temp) || '' }}
-          sandbox: ${{ env.ISSUE == '0' && 'read-only' || 'workspace-write' }}
-          prompt-file: ${{ runner.temp }}/implement.md
-          output-file: ${{ runner.temp }}/implementation.json
-          output-schema-file: >-
-            ${{ env.ISSUE == '0' &&
-            format('{0}/implementation-smoke.schema.json', runner.temp) ||
-            format('{0}/implementation.schema.json', runner.temp) }}
-      - name: Record the candidate
-        id: result
-        run: |
-          git show "$BASE:scripts/github-delivery.py" >"$RUNNER_TEMP/delivery.py"
-          python3 "$RUNNER_TEMP/delivery.py" candidate "$RUNNER_TEMP"
-      - uses: actions/upload-artifact@v7
-        id: upload
-        with:
-          name: ${{ env.CANDIDATE_ARTIFACT_NAME }}
-          path: ${{ runner.temp }}/candidate/
-          if-no-files-found: error
-          retention-days: 7
+          EVENT_NAME: ${{ github.event_name }}
+        run: python3 scripts/github-delivery.py intake "$RUNNER_TEMP"
 
-  review:
-    needs: implement
-    if: needs.implement.outputs.status == 'ready'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    outputs:
-      status: ${{ steps.result.outputs.status }}
-      artifact: ${{ steps.upload.outputs.artifact-id }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/download-artifact@v8
-        with:
-          artifact-ids: ${{ needs.implement.outputs.artifact }}
-          path: ${{ runner.temp }}/candidate
-      - name: Prepare the independent review
-        run: |
-          git fetch "$RUNNER_TEMP/candidate/change.bundle" refs/heads/tokicv-candidate
-          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE"
-          python3 scripts/github-delivery.py review-prompt "$RUNNER_TEMP"
-        env:
-          CANDIDATE: ${{ needs.implement.outputs.candidate }}
-      - name: Review with DeepSeek
-        timeout-minutes: 5
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.OPENCODE_GO_API_KEY }}
-          responses-api-endpoint: ${{ env.RESPONSES_URL }}
-          model: ${{ env.MODEL }}
-          effort: ${{ env.EFFORT }}
-          codex-version: 0.171.0
-          codex-home: ${{ runner.temp }}/codex-review
-          sandbox: read-only
-          prompt-file: ${{ runner.temp }}/review.md
-          output-file: ${{ runner.temp }}/review.json
-          output-schema: '{"type":"object","properties":{"status":{"type":"string","enum":["pass","blocked"]},"message":{"type":"string"}},"required":["status","message"],"additionalProperties":false}'
-      - name: Record review status
-        id: result
-        run: python3 scripts/github-delivery.py review "$RUNNER_TEMP"
-      - uses: actions/upload-artifact@v7
-        id: upload
-        with:
-          name: review-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/review.json
-          retention-days: 7
-
-  package:
-    needs: [implement, review]
-    if: >-
-      always() && !cancelled() && needs.implement.result == 'success' &&
-      (needs.implement.outputs.status == 'smoke' ||
-       (needs.review.result == 'success' && needs.review.outputs.status == 'pass'))
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/download-artifact@v8
-        if: needs.implement.outputs.status == 'ready'
-        with:
-          artifact-ids: ${{ needs.implement.outputs.artifact }}
-          path: ${{ runner.temp }}/candidate
-      - name: Check out the reviewed commit
-        if: needs.implement.outputs.status == 'ready'
-        env:
-          CANDIDATE: ${{ needs.implement.outputs.candidate }}
-        run: |
-          git fetch "$RUNNER_TEMP/candidate/change.bundle" refs/heads/tokicv-candidate
-          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE"
-          git switch --detach "$CANDIDATE"
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-      - name: Install Linux verification and packaging dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            dbus-daemon fonts-noto-cjk libgtk-3-0t64 libwebkit2gtk-4.1-dev \
-            locales mutter rpm xsel xwayland
-          sudo locale-gen zh_CN.UTF-8 en_US.UTF-8
-          echo /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1 >>"$GITHUB_PATH"
-      - name: Verify and package
-        run: scripts/deliver.sh "$RUNNER_TEMP/delivery"
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: tokicv-linux-amd64-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/delivery/*/commit.txt
-            ${{ runner.temp }}/delivery/*/version.txt
-            ${{ runner.temp }}/delivery/*/build.log
-            ${{ runner.temp }}/delivery/*/verification/*.log
-            ${{ runner.temp }}/delivery/*/verification/report.md
-            ${{ runner.temp }}/delivery/*/packages/linux-amd64/*.deb
-            ${{ runner.temp }}/delivery/*/packages/linux-amd64/*.rpm
-            ${{ runner.temp }}/delivery/*/packages/linux-amd64/*.tar.gz
-            ${{ runner.temp }}/delivery/*/packages/linux-amd64/install.sh
-            ${{ runner.temp }}/delivery/*/packages/linux-amd64/PKGBUILD
-          if-no-files-found: warn
-          retention-days: 14
-
-  report:
-    needs: [implement, review, package]
-    if: >-
-      always() && !cancelled() && needs.implement.result != 'skipped' &&
-      (github.event.issue.number != null || inputs.issue > 0) &&
-      github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
+  delivery:
+    needs: intake
+    if: needs.intake.outputs.skip != 'true'
     permissions:
       contents: write
-      pull-requests: write
       issues: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/download-artifact@v8
-        if: needs.implement.result == 'success'
-        with:
-          artifact-ids: ${{ needs.implement.outputs.artifact }}
-          path: ${{ runner.temp }}/candidate
-      - uses: actions/download-artifact@v8
-        if: needs.review.result == 'success'
-        with:
-          artifact-ids: ${{ needs.review.outputs.artifact }}
-          path: ${{ runner.temp }}
-      - name: Report the result and open the draft PR
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STATUS: ${{ needs.implement.outputs.status }}
-          REVIEW_RESULT: ${{ needs.review.result }}
-          PACKAGE_RESULT: ${{ needs.package.result }}
-          CANDIDATE: ${{ needs.implement.outputs.candidate }}
-        run: python3 scripts/github-delivery.py report "$RUNNER_TEMP"
-      - name: Mark blocked review
-        if: needs.review.outputs.status == 'blocked'
-        run: exit 1
+      pull-requests: write
+      actions: read
+    uses: ./.github/workflows/delivery-run.yml
+    with:
+      issue: ${{ fromJSON(needs.intake.outputs.issue) }}
+      target_kind: ${{ needs.intake.outputs.target_kind }}
+      target_number: ${{ fromJSON(needs.intake.outputs.target_number) }}
+      comment_id: ${{ needs.intake.outputs.comment_id }}
+      event_name: ${{ github.event_name }}
+    secrets:
+      OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}

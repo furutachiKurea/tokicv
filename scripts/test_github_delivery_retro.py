@@ -16,7 +16,7 @@ RETRO = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(RETRO)
 
 REPOSITORY = "owner/tokicv"
-BRANCH = "factory/tokicv-delivery"
+BRANCH = "main"
 RETRO_SKILL_SOURCE = (
     ROOT / ".agents/skills/retro/SKILL.md"
 ).read_text()
@@ -59,10 +59,11 @@ def make_run(
 
 
 class FakeAPI:
-    def __init__(self, *items):
+    def __init__(self, *items, pulls=None):
         self.runs = {run["id"]: run for _, run, _ in items}
         self.jobs = {run["id"]: job for _, run, job in items}
         self.recent = [run for _, run, _ in items]
+        self.pulls = pulls or {}
 
     def get_run(self, identifier):
         return self.runs[identifier]
@@ -72,6 +73,11 @@ class FakeAPI:
 
     def get_jobs(self, identifier):
         return [self.jobs[identifier]]
+
+    def get_pull(self, identifier):
+        if identifier not in self.pulls:
+            raise RETRO.RetroError("pull request not found")
+        return self.pulls[identifier]
 
 
 class DeliveryRetroTests(unittest.TestCase):
@@ -92,7 +98,7 @@ class DeliveryRetroTests(unittest.TestCase):
     def test_auto_requires_second_matching_failure(self):
         cases = [
             (FakeAPI(make_run(1), make_run(2, step="race")), 2),
-            (FakeAPI(make_run(1), make_run(2, branch="main")), 2),
+            (FakeAPI(make_run(1), make_run(2, branch="feature")), 2),
             (FakeAPI(make_run(1), make_run(2, repository="other/repo")), 2),
             (FakeAPI(make_run(1), make_run(2, title="TokiCV smoke")), 2),
             (FakeAPI(make_run(1), make_run(2), make_run(3)), 3),
@@ -113,6 +119,48 @@ class DeliveryRetroTests(unittest.TestCase):
             self.assertEqual(len(api.recent_runs()), 30)
         self.assertIn("per_page=30", request.call_args.args[0])
 
+    def test_auto_groups_issue_and_pr_titles_by_canonical_issue(self):
+        pulls = {
+            9: {
+                "base": {"ref": BRANCH},
+                "head": {
+                    "ref": "factory/issue-7",
+                    "repo": {"full_name": REPOSITORY},
+                },
+            }
+        }
+        api = FakeAPI(
+            make_run(1),
+            make_run(2, title="TokiCV PR #9"),
+            pulls=pulls,
+        )
+
+        evidence, reason = RETRO.auto_evidence(api, REPOSITORY, BRANCH, 2)
+
+        self.assertIsNone(reason)
+        self.assertEqual(evidence["issue"], 7)
+        self.assertEqual([run["id"] for run in evidence["runs"]], [1, 2])
+
+    def test_canonical_issue_rejects_nonfactory_pr(self):
+        api = FakeAPI(
+            make_run(1),
+            make_run(2, title="TokiCV PR #9"),
+            pulls={
+                9: {
+                    "base": {"ref": BRANCH},
+                    "head": {
+                        "ref": "feature/manual",
+                        "repo": {"full_name": REPOSITORY},
+                    },
+                }
+            },
+        )
+
+        evidence, reason = RETRO.auto_evidence(api, REPOSITORY, BRANCH, 2)
+
+        self.assertIsNone(evidence)
+        self.assertTrue(reason)
+
     def test_manual_accepts_two_default_branch_runs(self):
         api = FakeAPI(
             make_run(1, issue=7, stage="implement"),
@@ -127,7 +175,7 @@ class DeliveryRetroTests(unittest.TestCase):
     def test_manual_rejects_duplicate_or_wrong_branch(self):
         cases = [
             (FakeAPI(make_run(1)), [1, 1]),
-            (FakeAPI(make_run(1), make_run(2, branch="main")), [1, 2]),
+            (FakeAPI(make_run(1), make_run(2, branch="feature")), [1, 2]),
         ]
         for api, identifiers in cases:
             with self.subTest(recent=len(api.recent)):
